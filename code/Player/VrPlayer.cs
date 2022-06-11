@@ -151,7 +151,7 @@ partial class VrPlayer : Player
 	Vector3 startpoint;
 	Vector3 endpoint;
 
-	bool cutview = true;
+	bool cutview = false;
 	private void NonVRSimulate( Client cl )
 	{
 		if ( Input.Pressed( InputButton.Use ) )
