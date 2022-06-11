@@ -1,0 +1,197 @@
+//=========================================================================================================================
+// Optional
+//=========================================================================================================================
+HEADER
+{
+	CompileTargets = ( IS_SM_50 && ( PC || VULKAN ) );
+	Description = "Slice shader Stencil";
+}
+
+//=========================================================================================================================
+// Optional
+//=========================================================================================================================
+FEATURES
+{
+    #include "common/features.hlsl"
+
+    Feature(F_IS_BACK_LAYER, 0..1, "Stencil Setting");
+}
+
+//=========================================================================================================================
+// Optional
+//=========================================================================================================================
+MODES
+{
+    VrForward();													// Indicates this shader will be used for main rendering
+    Depth( "vr_depth_only.vfx" ); 									// Shader that will be used for shadowing and depth prepass
+    ToolsVis( S_MODE_TOOLS_VIS ); 									// Ability to see in the editor
+    ToolsWireframe( "vr_tools_wireframe.vfx" ); 					// Allows for mat_wireframe to work
+	ToolsShadingComplexity( "vr_tools_shading_complexity.vfx" ); 	// Shows how expensive drawing is in debug view
+}
+
+//=========================================================================================================================
+COMMON
+{
+	#include "common/shared.hlsl"
+
+    #define STENCIL_ALREADY_SET
+    #define DEPTH_STATE_ALREADY_SET
+    #define CULLMODE_ALREADY_SET
+
+    #define BLEND_MODE_ALREADY_SET
+    #define COLOR_WRITE_ALREADY_SET
+}
+
+//=========================================================================================================================
+
+struct VertexInput
+{
+	#include "common/vertexinput.hlsl"
+};
+
+//=========================================================================================================================
+
+struct PixelInput
+{
+	#include "common/pixelinput.hlsl"
+};
+
+//=========================================================================================================================
+
+VS
+{
+	#include "common/vertex.hlsl"
+	//
+	// Main
+	//
+	PixelInput MainVs( INSTANCED_SHADER_PARAMS( VS_INPUT i ) )
+	{
+		PixelInput o = ProcessVertex( i );
+		// Add your vertex manipulation functions here
+		return FinalizeVertex( o );
+	}
+}
+
+//=========================================================================================================================
+
+PS
+{
+    #include "common/pixel.hlsl"
+
+
+
+    StaticCombo( S_IS_BACK_LAYER, F_IS_BACK_LAYER, Sys( PC ) );
+
+    #if S_IS_BACK_LAYER
+        RenderState( DepthEnable, true );
+        RenderState( DepthWriteEnable, true );
+        RenderState( DepthFunc, LESS_EQUAL );
+        RenderState( StencilEnable, true );
+        RenderState( StencilReadMask, 0xFF );
+        RenderState( StencilWriteMask, 0xFF );
+        RenderState( StencilRef, 25 );
+
+        RenderState( StencilFailOp, KEEP );
+	    RenderState( StencilDepthFailOp, KEEP );
+	    RenderState( StencilPassOp, KEEP );
+        
+	    RenderState( StencilFunc, NOT_EQUAL );
+
+         
+        
+    #else
+
+        RenderState( DepthEnable, true );
+        RenderState( DepthWriteEnable, true );
+        RenderState( DepthFunc, LESS_EQUAL );
+
+        RenderState( StencilEnable, true );
+        RenderState( StencilReadMask, 0xFF );
+        RenderState( StencilWriteMask, 0xFF );
+        RenderState( StencilRef, 25 );
+        
+        RenderState( StencilFailOp, ZERO );
+	    RenderState( StencilDepthFailOp, REPLACE );
+	    RenderState( StencilPassOp, REPLACE );
+
+        RenderState( StencilFunc, ALWAYS );
+
+        RenderState( BackStencilFailOp, ZERO );
+	    RenderState( BackStencilDepthFailOp, REPLACE );
+	    RenderState( BackStencilPassOp, REPLACE );
+
+        RenderState( BackStencilFunc, ALWAYS );
+
+        //RenderState( DepthBias, -50000 ); // Value is steps in depth buffer (i.e. out of 2^24 if the depth buffer is 24 bit)
+        //RenderState( SlopeScaleDepthBias, -0.5 );
+	    //RenderState( DepthBiasClamp, -0.05 );
+
+       /*  RenderState( BlendEnable, true );
+        RenderState( SrcBlend, SRC_ALPHA );
+        RenderState( DstBlend, INV_SRC_ALPHA );
+        RenderState( ColorWriteEnable0, RGBA ); */
+
+        
+       
+    
+    #endif
+
+
+    CreateTexture2D( g_tFrameBufferCopyTexture ) < AsFramebuffer; SrgbRead( true ); Filter( MIN_MAG_MIP_LINEAR ); AddressU( CLAMP ); AddressV( CLAMP ); >;
+    CreateTexture2D( g_tMaskTexture ) < Attribute("Mask"); SrgbRead( true ); Filter( MIN_MAG_MIP_LINEAR ); AddressU( CLAMP ); AddressV( CLAMP ); >;
+    CreateTexture2D( g_tDepthCopyTexture ) < AsSceneDepth; SrgbRead( true ); Filter( MIN_MAG_MIP_LINEAR ); AddressU( CLAMP ); AddressV( CLAMP ); >;
+
+    float FetchDepth( PixelInput i, float2 vPositionUv )
+	{
+
+		return Tex2D( g_tDepthCopyTexture, vPositionUv );
+	}
+
+    bool DepthTest( PixelInput i )
+	{
+		float fDepth = FetchDepth( i, CalculateViewportUv( i.vPositionSs ) );
+		fDepth = RemapValClamped( fDepth, g_flViewportMinZ, g_flViewportMaxZ, 0.0, 1.0 );
+
+		float4 vPosPs = Position3WsToPs( i.vPositionWithOffsetWs );
+		float fDepthObj = (vPosPs.z) / (vPosPs.w);
+
+		return fDepth <= fDepthObj-0.1f;
+	}
+	//
+	// Main
+	//
+	PixelOutput MainPs( PixelInput i )
+	{
+		PixelOutput o;
+
+        #if( S_IS_BACK_LAYER )
+            o.vColor = float4(1, 0.5f, 0, 1);
+            float2 vPositionUv = i.vPositionSs.xy / g_vRenderTargetSize;
+            // Get the current color at a given pixel
+            float4 vFrameBufferColor = Tex2D( g_tFrameBufferCopyTexture, vPositionUv.xy ).rgba;
+            
+            float3 vPositionWs = i.vPositionWithOffsetWs.xyz + g_vHighPrecisionLightingOffsetWs.xyz;
+            //discard if the  too far away from camera
+            o.vColor.rgb = 0;
+        #else
+            o.vColor = float4(1, 1, 1, 1);/* 
+            o.vColor.rgb = i.vNormalWs; */
+
+            float2 vPositionUv = i.vPositionSs.xy / g_vRenderTargetSize;
+            // Get the current color at a given pixel
+            float3 vFrameBufferColor = Tex2D( g_tFrameBufferCopyTexture, vPositionUv.xy ).rgb;
+            float3 vPositionWs = i.vPositionWithOffsetWs.xyz;
+
+            float CameraDistance =length(i.vPositionWithOffsetWs.xyz);
+
+            //o.vColor.rgb =;// FetchDepth(vPositionUv);
+           /*  if(DepthTest(i)){
+                discard;
+            } */
+            
+            o.vColor.rgb = 1;
+
+        #endif 
+		return o;
+	}
+}

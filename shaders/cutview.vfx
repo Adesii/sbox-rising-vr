@@ -1,0 +1,114 @@
+//=========================================================================================================================
+// Optional
+//=========================================================================================================================
+HEADER
+{
+	CompileTargets = ( IS_SM_50 && ( PC || VULKAN ) );
+	Description = "Slice shader Stencil";
+}
+
+//=========================================================================================================================
+// Optional
+//=========================================================================================================================
+FEATURES
+{
+    #include "common/features.hlsl"
+}
+
+//=========================================================================================================================
+// Optional
+//=========================================================================================================================
+MODES
+{
+    VrForward();													// Indicates this shader will be used for main rendering
+    Depth( "vr_depth_only.vfx" ); 									// Shader that will be used for shadowing and depth prepass
+    ToolsVis( S_MODE_TOOLS_VIS ); 									// Ability to see in the editor
+    ToolsWireframe( "vr_tools_wireframe.vfx" ); 					// Allows for mat_wireframe to work
+	ToolsShadingComplexity( "vr_tools_shading_complexity.vfx" ); 	// Shows how expensive drawing is in debug view
+}
+
+//=========================================================================================================================
+COMMON
+{
+	#include "common/shared.hlsl"
+
+    #define STENCIL_ALREADY_SET
+    #define DEPTH_STATE_ALREADY_SET
+    #define BLEND_MODE_ALREADY_SET
+    #define COLOR_WRITE_ALREADY_SET
+}
+
+//=========================================================================================================================
+
+struct VertexInput
+{
+	#include "common/vertexinput.hlsl"
+};
+
+//=========================================================================================================================
+
+struct PixelInput
+{
+	#include "common/pixelinput.hlsl"
+};
+
+//=========================================================================================================================
+
+VS
+{
+	#include "common/vertex.hlsl"
+	//
+	// Main
+	//
+	PixelInput MainVs( INSTANCED_SHADER_PARAMS( VS_INPUT i ) )
+	{
+		PixelInput o = ProcessVertex( i );
+		// Add your vertex manipulation functions here
+		return FinalizeVertex( o );
+	}
+}
+
+//=========================================================================================================================
+
+PS
+{
+    #include "common/pixel.hlsl"
+
+
+
+    RenderState( DepthEnable, true );
+    RenderState( DepthWriteEnable, true );
+    RenderState( DepthFunc, LESS_EQUAL );
+
+    RenderState( StencilEnable, true );
+    RenderState( StencilReadMask, 0xFF );
+    RenderState( StencilWriteMask, 0xFF );
+    
+    RenderState( StencilRef, 5 );
+
+    //BoolAttribute( translucent, true );
+    CreateTexture2D( g_tFrameBufferCopyTexture ) < AsFramebuffer; SrgbRead( true ); Filter( MIN_MAG_MIP_LINEAR ); AddressU( CLAMP ); AddressV( CLAMP ); >;
+    CreateTexture2D( g_tMaskTexture ) < Attribute("MaskBuffer"); SrgbRead( true ); Filter( MIN_MAG_MIP_LINEAR ); AddressU( CLAMP ); AddressV( CLAMP ); >;
+
+	
+	//
+	// Main
+	//
+	PixelOutput MainPs( PixelInput i )
+	{
+		PixelOutput o;
+        o.vColor = float4(0,0,0,1);
+        float2 vPositionUv = i.vPositionSs.xy / g_vRenderTargetSize;
+        // Get the current color at a given pixel
+        float3 vFrameBufferColor = Tex2D( g_tFrameBufferCopyTexture, vPositionUv.xy ).rgb;
+        float3 vMaskBufferColor = Tex2D( g_tMaskTexture, vPositionUv.xy ).rgb;
+        o.vColor.rgb = vFrameBufferColor*0;
+        /* o.vColor.rgb = vMaskBufferColor; */
+        o.vColor.a = 1;
+        /* if(vMaskBufferColor.g != 0){
+            o.vColor.rgb = 0;
+            o.vColor.a = 1;
+        } */
+		return o;
+	}
+}

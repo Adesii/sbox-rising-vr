@@ -1,0 +1,75 @@
+HEADER
+{
+	DevShader = true;
+	CompileTargets = ( IS_SM_50 && ( PC || VULKAN ) );
+	Version = 1;
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+MODES
+{
+	Default();
+	VrForward();
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+FEATURES
+{
+	#include "ui/features.hlsl"
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+COMMON
+{
+	#include "ui/common.hlsl"
+    #define STENCIL_ALREADY_SET
+}
+  
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+VS
+{
+	#include "ui/vertex.hlsl"  
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+PS
+{
+	#include "ui/pixel.hlsl"
+
+	float4 g_vViewport < Source( Viewport ); >;
+	float4 g_vInvTextureDim < Source( InvTextureDim ); SourceArg( g_tColor ); >;
+	CreateTexture2D( g_tColor ) < Attribute( "Texture" ); SrgbRead( true ); Filter( ANISOTROPIC ); >;
+
+	RenderState( SrgbWriteEnable0, true );
+	RenderState( ColorWriteEnable0, RGBA );
+	RenderState( FillMode, SOLID );
+	RenderState( CullMode, NONE );
+	RenderState( DepthWriteEnable, false );
+
+
+    RenderState( StencilEnable, true );
+    RenderState( StencilReadMask, 0xFF );
+    RenderState( StencilWriteMask, 0xFF );
+    RenderState( StencilRef, 25 );
+
+    RenderState( StencilFailOp, REPLACE );
+	    RenderState( StencilDepthFailOp, REPLACE );
+	    RenderState( StencilPassOp, REPLACE );
+
+        
+	RenderState( StencilFunc, NOT_EQUAL );
+	
+
+	#define SUBPIXEL_AA_MAGIC 0.5
+
+	PS_OUTPUT MainPs( PS_INPUT i )
+	{
+		PS_OUTPUT o;
+		UI_CommonProcessing_Pre( i );
+
+		float4 vImage = Tex2DLevel( g_tColor, i.vTexCoord.xy, 0.0f );
+		o.vColor.rgb = 0;
+        o.vColor.a = 0.99f;
+		return UI_CommonProcessing_Post( i, o );
+	}
+}

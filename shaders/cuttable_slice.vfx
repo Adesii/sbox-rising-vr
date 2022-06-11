@@ -1,0 +1,95 @@
+//=========================================================================================================================
+// Optional
+//=========================================================================================================================
+HEADER
+{
+	CompileTargets = ( IS_SM_50 && ( PC || VULKAN ) );
+	Description = "Slice shader";
+}
+
+//=========================================================================================================================
+// Optional
+//=========================================================================================================================
+FEATURES
+{
+    #include "common/features.hlsl"
+}
+
+//=========================================================================================================================
+// Optional
+//=========================================================================================================================
+MODES
+{
+    VrForward();													// Indicates this shader will be used for main rendering
+    Depth( "vr_depth_only.vfx" ); 									// Shader that will be used for shadowing and depth prepass
+    ToolsVis( S_MODE_TOOLS_VIS ); 									// Ability to see in the editor
+    ToolsWireframe( "vr_tools_wireframe.vfx" ); 					// Allows for mat_wireframe to work
+	ToolsShadingComplexity( "vr_tools_shading_complexity.vfx" ); 	// Shows how expensive drawing is in debug view
+}
+
+//=========================================================================================================================
+COMMON
+{
+	#include "common/shared.hlsl"
+
+}
+
+//=========================================================================================================================
+
+struct VertexInput
+{
+	#include "common/vertexinput.hlsl"
+};
+
+//=========================================================================================================================
+
+struct PixelInput
+{
+	#include "common/pixelinput.hlsl"
+};
+
+//=========================================================================================================================
+
+VS
+{
+	#include "common/vertex.hlsl"
+	//
+	// Main
+	//
+	PixelInput MainVs( INSTANCED_SHADER_PARAMS( VS_INPUT i ) )
+	{
+		PixelInput o = ProcessVertex( i );
+		// Add your vertex manipulation functions here
+		return FinalizeVertex( o );
+	}
+}
+
+//=========================================================================================================================
+
+PS
+{
+    #include "common/pixel.hlsl"
+	#include "noise/shared.hlsl"
+
+	float g_fBrightness <Default(1);Range(0,5);>;
+	float3 g_fCutColor <UiType( Color );Default3(1,1,1);>;
+
+	float g_fMinCutoff <Default(0);Range(0,1);>;
+	float g_fMaxCutoff2 <Default(1);Range(0,1);>;
+	
+	//
+	// Main
+	//
+	PixelOutput MainPs( PixelInput i )
+	{
+		PixelOutput o;
+		
+		float3 vPositionWs = i.vPositionWithOffsetWs.xyz + g_vHighPrecisionLightingOffsetWs.xyz;
+		float2 vPos = vPositionWs.xy/NoiseSize/100;
+    	float fracc = frac(g_flTime/NoiseSpeed)*(Noiseperx*(Noisepery*Noisepery))/0.5;
+		o.vColor.rgb = (min(max(noiseWithOctave(vPos+fracc,3,0.5f,1.0f),g_fMinCutoff),g_fMaxCutoff2))*g_fCutColor;
+		o.vColor.rgb *= g_fBrightness;
+		o.vColor.a = 1;
+		return o;
+	}
+}

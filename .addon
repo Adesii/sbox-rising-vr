@@ -1,0 +1,25 @@
+{
+  "Title": "Rising VR",
+  "Type": "game",
+  "Org": "local",
+  "Ident": "risingvr",
+  "Schema": 1,
+  "HasAssets": true,
+  "AssetsPath": "",
+  "ResourcePaths": null,
+  "HasCode": true,
+  "CodePath": "code",
+  "RootNamespace": "Rising",
+  "Metadata": {
+    "MapList": [
+      "local.rising_test_map"
+    ],
+    "PerMapRanking": false,
+    "LeaderboardType": 0,
+    "RankType": 0,
+    "MapSelect": 0,
+    "GameNetworkType": 0,
+    "MaxPlayers": 0,
+    "MinPlayers": 0
+  }
+}
