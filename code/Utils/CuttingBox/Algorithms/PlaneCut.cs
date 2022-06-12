@@ -118,6 +118,8 @@ public class PlaneCut : CuttingAlgorithm
 			stuff.Add( null );
 		}
 
+		ResultCenters = new List<Vector3> { GetCenter( hullpoints1.ToArray() ), GetCenter( hullpoints2.ToArray() ) };
+
 		ResultModels = stuff;
 		return;
 	}
@@ -266,6 +268,14 @@ public class PlaneCut : CuttingAlgorithm
 	}
 
 	private Vector3 GetCenter( ConvexHullPos[] points )
+	{
+		Vector3 center = Vector3.Zero;
+		foreach ( var point in points )
+			center += point;
+		return center / points.Length;
+	}
+
+	private Vector3 GetCenter( Vector3[] points )
 	{
 		Vector3 center = Vector3.Zero;
 		foreach ( var point in points )
