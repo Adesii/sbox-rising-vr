@@ -29,11 +29,11 @@
 				[
 					{
 						_class = "Prefab"
-						disabled = true
 						target_file = "models/citizen/prefabs/citizen_physicsshapelist.vmdl_prefab"
 					},
 					{
 						_class = "PhysicsHullFromRender"
+						disabled = true
 						parent_bone = ""
 						surface_prop = "default"
 						collision_group = ""
@@ -63,6 +63,7 @@
 								cpu_access = true
 							},
 						]
+						disabled = true
 						filename = "models/testing/suzane.dmx"
 						import_translation = [ 0.0, 0.0, 0.0 ]
 						import_rotation = [ 0.0, 0.0, 0.0 ]
@@ -74,10 +75,7 @@
 						import_filter = 
 						{
 							exclude_by_default = true
-							exception_list = 
-							[
-								"Icosphere",
-							]
+							exception_list = [  ]
 						}
 					},
 					{
@@ -94,7 +92,6 @@
 								cpu_access = true
 							},
 						]
-						disabled = true
 						filename = "models/citizen/citizen.fbx"
 						import_translation = [ 0.0, 0.0, 0.0 ]
 						import_rotation = [ 0.0, 0.0, 0.0 ]
@@ -105,7 +102,7 @@
 						parent_bone = ""
 						import_filter = 
 						{
-							exclude_by_default = true
+							exclude_by_default = false
 							exception_list = [  ]
 						}
 					},
@@ -163,7 +160,6 @@
 				[
 					{
 						_class = "ModelModifier_ScaleAndMirror"
-						disabled = true
 						scale = 0.39
 						mirror_x = false
 						mirror_y = false
@@ -191,8 +187,20 @@
 				[
 					{
 						_class = "Prefab"
-						disabled = true
 						target_file = "models/citizen/prefabs/citizen_physicsjointlist.vmdl_prefab"
+					},
+				]
+			},
+			{
+				_class = "Skeleton"
+				children = 
+				[
+					{
+						_class = "Bone"
+						name = "testing"
+						origin = [ 0.0, 0.0, 0.0 ]
+						angles = [ 0.0, 0.0, 0.0 ]
+						do_not_discard = true
 					},
 				]
 			},

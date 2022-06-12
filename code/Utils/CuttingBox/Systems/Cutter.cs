@@ -99,6 +99,7 @@ public static class Cutter
 					var rott = HitObject.Transform.RotationToWorld( item.Angles.ToRotation() );
 					if ( poss.Distance( firstCuttable.Transform.PointToWorld( cutbox.Centers[0] ) ) <= poss.Distance( secondCuttable.Transform.PointToWorld( cutbox.Centers[1] ) ) )
 					{
+						if ( !firstCuttable.IsValid() ) continue;
 						var physjoint = PhysicsJoint.CreateHinge( firstCuttable.PhysicsBody, new PhysicsBody( Map.Physics )
 						{
 							Position = poss,
@@ -115,6 +116,7 @@ public static class Cutter
 					}
 					else
 					{
+						if ( !secondCuttable.IsValid() ) continue;
 						var physjoint = PhysicsJoint.CreateHinge( secondCuttable.PhysicsBody, new PhysicsBody( Map.Physics )
 						{
 							Position = poss,

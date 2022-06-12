@@ -8,13 +8,8 @@ public partial class CuttableProperties
 	[ResourceType( "vmat" )]
 	public string MaterialName { get; set; }
 
-	internal CuttableProperties copy()
-	{
-		return new CuttableProperties
-		{
-			MaterialName = MaterialName
-		};
-	}
+	[HideInEditor]
+	public string ModelName { get; set; }
 
 	public byte[] SendProperties()
 	{
@@ -22,6 +17,7 @@ public partial class CuttableProperties
 		using var bw = new BinaryWriter( ms );
 
 		bw.Write( MaterialName );
+		bw.Write( ModelName );
 
 		return ms.ToArray();
 	}
@@ -33,7 +29,8 @@ public partial class CuttableProperties
 
 		return new CuttableProperties
 		{
-			MaterialName = br.ReadString()
+			MaterialName = br.ReadString(),
+			ModelName = br.ReadString()
 		};
 	}
 

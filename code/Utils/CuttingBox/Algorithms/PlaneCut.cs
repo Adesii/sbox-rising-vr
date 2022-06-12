@@ -25,6 +25,7 @@ public class PlaneCut : CuttingAlgorithm
 			}
 			var originalVerts = OriginalModel.GetVertices();
 			var originalIndices = OriginalModel.GetIndices();
+			ModelProperties.ModelName = OriginalModel.Name;
 
 			foreach ( var item in originalVerts )
 			{
