@@ -185,6 +185,7 @@ partial class VrPlayer : Player
 
 			Vector3 normal = (startpoint - endpoint).Cross( eyes - startpoint );
 			Plane idk = new( EyePosition, normal );
+			List<Entity> uniquehitents = new();
 			var tr = Trace.Sphere( 50, EyePosition, EyePosition + EyeRotation.Forward * 100 ).Ignore( this ).EntitiesOnly().RunAll();
 			Log.Debug( $"_____________", 3 );
 			if ( tr != null )
@@ -193,9 +194,10 @@ partial class VrPlayer : Player
 					TraceResult ent = tr[i];
 					if ( ent.Hit )
 					{
-						if ( ent.Entity is BaseCuttable cuttable && idk.GetDistance( cuttable.Position ) < 25f )
+						if ( !uniquehitents.Contains( ent.Entity ) && ent.Entity is BaseCuttable cuttable && idk.GetDistance( cuttable.Position ) < 25f )
 						{
 							cuttable.CutObject( cuttable.Transform.NormalToLocal( normal ), cuttable.Transform.PointToLocal( ent.HitPosition ), 100 );
+							uniquehitents.Add( cuttable );
 						}
 					}
 				}
