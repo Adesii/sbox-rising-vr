@@ -15,7 +15,12 @@ public class CuttingBox<T> where T : CuttingAlgorithm
 
 	public List<Model> Models => Algorithm.ResultModels;
 
+	public List<Vector3> Centers => Algorithm.ResultCenters;
+
 	public CuttableProperties ModelProperties => Algorithm.ModelProperties;
+
+	public CuttableAttachment[] Attachments { get; set; }
+	public Transform[] AttachmentsPositions { get; set; }
 
 	public CuttingBox()
 	{

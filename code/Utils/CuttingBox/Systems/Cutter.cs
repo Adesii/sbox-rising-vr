@@ -20,7 +20,7 @@ public static class Cutter
 	public const int maxchunksize = 500000;
 	public static async void CutObject( this BaseCuttable HitObject, Vector3 Plane, Vector3 Position = new(), float ForcePush = 0f )
 	{
-		Stopwatch sw = new Stopwatch();
+		Stopwatch sw = new();
 		sw.Start();
 		var firstCuttable = CreateCuttable( HitObject, Plane, Position );
 		var secondCuttable = CreateCuttable( HitObject, Plane, Position );
@@ -37,6 +37,8 @@ public static class Cutter
 		}
 		await HitObject.LastCuttingBox.Algorithm.Cut();
 		var cutbox = HitObject.LastCuttingBox;
+
+
 
 		//TODO: figure out if there is a better way than this
 		firstCuttable.LastCuttingBox = new()
@@ -81,6 +83,116 @@ public static class Cutter
 		{
 			secondCuttable?.Delete();
 		}
+		if ( HitObject.UseAttachments )
+			if ( HitObject.Model.HasData<CuttableAttachment[]>() )
+			{
+				var attachments = HitObject.Model.GetData<CuttableAttachment[]>();
+
+				var firstattachments = new List<CuttableAttachment>();
+				var firstattachmentsPositions = new List<Transform>();
+				var secondattachments = new List<CuttableAttachment>();
+				var secondattachmentsPositions = new List<Transform>();
+				for ( int i = 0; i < attachments.Length; i++ )
+				{
+					CuttableAttachment item = attachments[i];
+					var poss = HitObject.Transform.PointToWorld( item.AttachPosition );
+					var rott = HitObject.Transform.RotationToWorld( item.Angles.ToRotation() );
+					if ( poss.Distance( firstCuttable.Transform.PointToWorld( cutbox.Centers[0] ) ) <= poss.Distance( secondCuttable.Transform.PointToWorld( cutbox.Centers[1] ) ) )
+					{
+						var physjoint = PhysicsJoint.CreateHinge( firstCuttable.PhysicsBody, new PhysicsBody( Map.Physics )
+						{
+							Position = poss,
+							Rotation = rott,
+						}, poss, item.Angles.Direction );
+						if ( item.LimitAngles )
+						{
+							physjoint.MinAngle = item.MinimumAngle;
+							physjoint.MaxAngle = item.MaximumAngle;
+						}
+						firstCuttable.PhysicsJoints.Add( physjoint );
+						firstattachments.Add( item );
+						firstattachmentsPositions.Add( new Transform( poss, rott ) );
+					}
+					else
+					{
+						var physjoint = PhysicsJoint.CreateHinge( secondCuttable.PhysicsBody, new PhysicsBody( Map.Physics )
+						{
+							Position = poss,
+							Rotation = rott,
+						}, poss, item.Angles.Direction );
+						if ( item.LimitAngles )
+						{
+							physjoint.MinAngle = item.MinimumAngle;
+							physjoint.MaxAngle = item.MaximumAngle;
+						}
+						secondCuttable.PhysicsJoints.Add( physjoint );
+						secondattachments.Add( item );
+						secondattachmentsPositions.Add( new Transform( poss, rott ) );
+					}
+				}
+				firstCuttable.LastCuttingBox.Attachments = firstattachments.ToArray();
+				secondCuttable.LastCuttingBox.Attachments = secondattachments.ToArray();
+				firstCuttable.LastCuttingBox.AttachmentsPositions = firstattachmentsPositions.ToArray();
+				secondCuttable.LastCuttingBox.AttachmentsPositions = secondattachmentsPositions.ToArray();
+
+			}
+			else if ( cutbox.Attachments != null )
+			{
+
+				var attachments = cutbox.Attachments;
+				var attachmentsPositions = cutbox.AttachmentsPositions;
+
+				var firstattachments = new List<CuttableAttachment>();
+				var firstattachmentsPositions = new List<Transform>();
+				var secondattachments = new List<CuttableAttachment>();
+				var secondattachmentsPositions = new List<Transform>();
+
+				for ( int i = 0; i < attachments.Length; i++ )
+				{
+					CuttableAttachment item = attachments[i];
+					Transform pos = attachmentsPositions[i];
+					if ( (pos.Position).Distance( firstCuttable.Transform.PointToWorld( cutbox.Centers[0] ) ) <= (pos.Position).Distance( secondCuttable.Transform.PointToWorld( cutbox.Centers[1] ) ) )
+					{
+						if ( !firstCuttable.PhysicsBody.IsValid() ) continue;
+						var physjoint = PhysicsJoint.CreateHinge( firstCuttable.PhysicsBody, new PhysicsBody( Map.Physics )
+						{
+							Position = pos.Position,
+							Rotation = HitObject.Rotation * item.Angles.ToRotation(),
+						}, pos.Position, item.Angles.Direction );
+						if ( item.LimitAngles )
+						{
+							physjoint.MinAngle = item.MinimumAngle;
+							physjoint.MaxAngle = item.MaximumAngle;
+						}
+						firstCuttable.PhysicsJoints.Add( physjoint );
+						firstattachments.Add( item );
+						firstattachmentsPositions.Add( pos );
+					}
+					else
+					{
+						if ( !secondCuttable.PhysicsBody.IsValid() ) continue;
+						var physjoint = PhysicsJoint.CreateHinge( secondCuttable.PhysicsBody, new PhysicsBody( Map.Physics )
+						{
+							Position = pos.Position,
+							Rotation = HitObject.Rotation * item.Angles.ToRotation(),
+						}, pos.Position, item.Angles.Direction );
+						if ( item.LimitAngles )
+						{
+							physjoint.MinAngle = item.MinimumAngle;
+							physjoint.MaxAngle = item.MaximumAngle;
+						}
+						secondCuttable.PhysicsJoints.Add( physjoint );
+						secondattachments.Add( item );
+						secondattachmentsPositions.Add( pos );
+					}
+				}
+				firstCuttable.LastCuttingBox.Attachments = firstattachments.ToArray();
+				secondCuttable.LastCuttingBox.Attachments = secondattachments.ToArray();
+				firstCuttable.LastCuttingBox.AttachmentsPositions = firstattachmentsPositions.ToArray();
+				secondCuttable.LastCuttingBox.AttachmentsPositions = secondattachmentsPositions.ToArray();
+			}
+
+
 
 		//TODO: figure out a better solution to make the object move apart from the cut
 		var ForcePushInDirectionofplane = Plane.Normal * ForcePush;

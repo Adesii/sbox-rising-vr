@@ -26,10 +26,23 @@ public partial class BaseCuttable : ModelEntity
 	[Net, Property]
 	public bool StartPhysics { get; set; } = true;
 
+	[Net, Property]
+	public bool UseAttachments { get; set; } = true;
+
 	public BaseCuttableSO CutViewObject { get; set; }
 	public SceneObject CutViewModel { get; set; }
 
 	public CuttingBox<PlaneCut> LastCuttingBox { get; set; }
+
+	public List<PhysicsJoint> PhysicsJoints { get; set; } = new();
+
+	public BaseCuttable()
+	{
+	}
+
+	public BaseCuttable( string modelName ) : base( modelName )
+	{
+	}
 
 	public override void Spawn()
 	{
@@ -38,6 +51,35 @@ public partial class BaseCuttable : ModelEntity
 			SetupPhysicsFromModel( PhysicsMotionType.Keyframed );
 		else
 			SetupPhysicsFromModel( PhysicsMotionType.Dynamic );
+	}
+
+	public void GenerateAttachments()
+	{
+		if ( Model.HasData<CuttableAttachment[]>() )
+		{
+			var attachments = Model.GetData<CuttableAttachment[]>();
+			foreach ( var item in PhysicsJoints )
+			{
+				item.Remove();
+			}
+
+			foreach ( var item in attachments )
+			{
+				var poss = Transform.PointToWorld( item.AttachPosition );
+				var rott = Transform.RotationToWorld( item.Angles.ToRotation() );
+				var physjoint = PhysicsJoint.CreateHinge( PhysicsBody, new PhysicsBody( Map.Physics )
+				{
+					Position = poss,
+					Rotation = rott,
+				}, poss, item.Angles.Direction );
+				if ( item.LimitAngles )
+				{
+					physjoint.MinAngle = item.MinimumAngle;
+					physjoint.MaxAngle = item.MaximumAngle;
+				}
+				PhysicsJoints.Add( physjoint );
+			}
+		}
 	}
 
 	protected override void OnDestroy()
@@ -51,6 +93,19 @@ public partial class BaseCuttable : ModelEntity
 		{
 			CutViewModel.Delete();
 		}
+		foreach ( var joint in PhysicsJoints )
+		{
+			joint.Remove();
+		}
+	}
+	[Event.Tick.Server]
+	public void ServerDebug()
+	{
+		if ( Rising.Util.Debug.Level > 4 )
+			foreach ( var item in PhysicsJoints )
+			{
+				DebugOverlay.Axis( item.Body2.Position, Rotation * item.Point1.LocalRotation );
+			}
 	}
 	[Event.Frame]
 	public void showplanes()
@@ -70,6 +125,7 @@ public partial class BaseCuttable : ModelEntity
 			SceneObject.Flags.IsTranslucent = false;
 			SceneObject.Flags.IsOpaque = true;
 		}
+
 	}
 
 	IEnumerable<byte> _cutbufferData;
@@ -153,6 +209,8 @@ public partial class BaseCuttable : ModelEntity
 		Log.Info( "Cuttable: Created CutViewObject" );
 	}
 	public static bool RenderStencil = false;
+
+
 
 	[Event( "StencilToggle" )]
 	public async void ToggleStencil( bool val )

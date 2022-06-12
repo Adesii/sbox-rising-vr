@@ -35,10 +35,11 @@ public partial class ObjectThrower : Entity
 			{
 				ThrownObject.Delete();
 			}
-			ThrownObject = new BaseCuttable()
+			ThrownObject = new BaseCuttable( ModelToThrow )
 			{
-				Model = Model.Load( ModelToThrow ),
-				Transform = Transform
+				Transform = Transform,
+				UseAttachments = false,
+
 			};
 
 			ThrownObject.Velocity = Rotation.Forward * ThrowForce * (ThrownObject.PhysicsBody.Mass / 35);

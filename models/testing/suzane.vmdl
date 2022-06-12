@@ -28,6 +28,11 @@
 				children = 
 				[
 					{
+						_class = "Prefab"
+						disabled = true
+						target_file = "models/citizen/prefabs/citizen_physicsshapelist.vmdl_prefab"
+					},
+					{
 						_class = "PhysicsHullFromRender"
 						parent_bone = ""
 						surface_prop = "default"
@@ -58,7 +63,6 @@
 								cpu_access = true
 							},
 						]
-						disabled = true
 						filename = "models/testing/suzane.dmx"
 						import_translation = [ 0.0, 0.0, 0.0 ]
 						import_rotation = [ 0.0, 0.0, 0.0 ]
@@ -70,7 +74,10 @@
 						import_filter = 
 						{
 							exclude_by_default = true
-							exception_list = [  ]
+							exception_list = 
+							[
+								"Icosphere",
+							]
 						}
 					},
 					{
@@ -87,17 +94,18 @@
 								cpu_access = true
 							},
 						]
+						disabled = true
 						filename = "models/citizen/citizen.fbx"
 						import_translation = [ 0.0, 0.0, 0.0 ]
 						import_rotation = [ 0.0, 0.0, 0.0 ]
-						import_scale = 0.39
+						import_scale = 1.0
 						align_origin_x_type = "None"
 						align_origin_y_type = "None"
 						align_origin_z_type = "None"
 						parent_bone = ""
 						import_filter = 
 						{
-							exclude_by_default = false
+							exclude_by_default = true
 							exception_list = [  ]
 						}
 					},
@@ -114,6 +122,77 @@
 						{
 							materialname = resource:"models/citizen/skin/citizen_skin.vmat"
 						}
+					},
+					{
+						_class = "GenericGameData"
+						game_class = "CuttableAttachment"
+						game_keys = 
+						{
+							cut_origin = [ -3.69102, -0.0, 28.4841 ]
+							cut_min_hinge = 0.0
+							cut_max_hinge = 0.0
+							cut_limited_hinge = false
+							cut_attach_parent = ""
+							cut_angles_hinge = [ -18.4382, 3.94626, -87.1274 ]
+							enable_limit = true
+							min_angle = -25.0
+							max_angle = 138.0
+						}
+					},
+					{
+						_class = "GenericGameData"
+						game_class = "CuttableAttachment"
+						game_keys = 
+						{
+							cut_origin = [ 3.07122, -22.1977, 37.6121 ]
+							cut_min_hinge = 0.0
+							cut_max_hinge = 0.0
+							cut_limited_hinge = false
+							cut_attach_parent = ""
+							cut_angles_hinge = [ -72.4089, 161.467, -152.029 ]
+							enable_limit = true
+							min_angle = -25.0
+							max_angle = 138.0
+						}
+					},
+				]
+			},
+			{
+				_class = "ModelModifierList"
+				children = 
+				[
+					{
+						_class = "ModelModifier_ScaleAndMirror"
+						disabled = true
+						scale = 0.39
+						mirror_x = false
+						mirror_y = false
+						mirror_z = false
+						flip_bone_forward = false
+						swap_left_and_right_bones = false
+					},
+				]
+			},
+			{
+				_class = "BoneMarkupList"
+				children = 
+				[
+					{
+						_class = "Prefab"
+						disabled = true
+						target_file = "models/citizen/prefabs/citizen_bonemarkuplist.vmdl_prefab"
+					},
+				]
+				bone_cull_type = "Aggressive"
+			},
+			{
+				_class = "PhysicsJointList"
+				children = 
+				[
+					{
+						_class = "Prefab"
+						disabled = true
+						target_file = "models/citizen/prefabs/citizen_physicsjointlist.vmdl_prefab"
 					},
 				]
 			},

@@ -20,11 +20,12 @@ public partial class ObjectSpawner : Entity
 		if ( IsServer )
 		{
 			if ( testCube.IsValid() ) testCube.Delete();
-			var cube = new BaseCuttable
+			var cube = new BaseCuttable( "models/testing/suzane.vmdl" )
 			{
-				Model = Model.Load( "models/testing/suzane.vmdl" ),
-				Transform = Transform
+				Transform = Transform,
+				UseAttachments = true,
 			};
+			cube.GenerateAttachments();
 			testCube = cube;
 		}
 
