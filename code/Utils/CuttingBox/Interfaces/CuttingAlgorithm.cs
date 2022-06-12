@@ -20,6 +20,7 @@ public class CuttingAlgorithm
 	public List<BaseCuttable> Cuttables;
 
 	public CuttableProperties ModelProperties { get; set; }
+	public List<Vector3> ResultCenters { get; set; }
 
 	public virtual async Task Cut()
 	{
