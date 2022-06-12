@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using ACuttingBox.Algorithms;
 using ACuttingBox.Buffers;
+using ACuttingBox.Entities;
 
 namespace ACuttingBox.Builders;
 
@@ -11,6 +12,12 @@ public struct PlaneCutBuilder
 	public PlaneCutBuilder()
 	{
 		cut = new PlaneCut();
+	}
+
+	public PlaneCutBuilder WithOriginalCuttable( BaseCuttable cuttable )
+	{
+		cut.OriginalCuttable = cuttable;
+		return this;
 	}
 
 	public PlaneCutBuilder WithNormal( Vector3 normal )

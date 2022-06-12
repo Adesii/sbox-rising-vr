@@ -29,11 +29,11 @@
 				[
 					{
 						_class = "Prefab"
+						disabled = true
 						target_file = "models/citizen/prefabs/citizen_physicsshapelist.vmdl_prefab"
 					},
 					{
 						_class = "PhysicsHullFromRender"
-						disabled = true
 						parent_bone = ""
 						surface_prop = "default"
 						collision_group = ""

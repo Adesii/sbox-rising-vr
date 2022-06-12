@@ -27,11 +27,13 @@ public static class Cutter
 
 		if ( HitObject.LastCuttingBox == null )
 			HitObject.LastCuttingBox = CuttingBox.CreatePlaneCut()
+				.WithOriginalCuttable( HitObject )
 				.WithModel( HitObject.Model )
 				.WithNormal( Plane )
 				.WithPoint( Position ).Create();
 		else
 		{
+			HitObject.LastCuttingBox.Algorithm.OriginalCuttable = HitObject;
 			HitObject.LastCuttingBox.Algorithm.PlaneNormal = Plane;
 			HitObject.LastCuttingBox.Algorithm.PlanePoint = Position;
 		}

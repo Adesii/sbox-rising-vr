@@ -7,6 +7,7 @@ namespace ACuttingBox.Interfaces;
 
 public class CuttingAlgorithm
 {
+	public BaseCuttable OriginalCuttable;
 	public Model OriginalModel;
 	public CutBuffer OriginalCutBuffer;
 
