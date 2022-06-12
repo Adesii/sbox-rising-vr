@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using ACuttingBox.Algorithms;
 using ACuttingBox.Buffers;
 
@@ -42,9 +43,9 @@ public struct PlaneCutBuilder
 		return this;
 	}
 
-	public CuttingBox<PlaneCut> Cut()
+	public async Task<CuttingBox<PlaneCut>> Cut()
 	{
-		cut.Cut();
+		await cut.Cut();
 		var res = new CuttingBox<PlaneCut>( cut );
 		return res;
 	}

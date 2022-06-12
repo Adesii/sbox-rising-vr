@@ -9,6 +9,7 @@ using ACuttingBox.Buffers;
 using ACuttingBox.Properties;
 using Rising.Utils;
 using Rising.Util;
+using System.Diagnostics;
 
 namespace ACuttingBox.Systems;
 
@@ -19,6 +20,8 @@ public static class Cutter
 	public const int maxchunksize = 500000;
 	public static async void CutObject( this BaseCuttable HitObject, Vector3 Plane, Vector3 Position = new(), float ForcePush = 0f )
 	{
+		Stopwatch sw = new Stopwatch();
+		sw.Start();
 		var firstCuttable = CreateCuttable( HitObject, Plane, Position );
 		var secondCuttable = CreateCuttable( HitObject, Plane, Position );
 
@@ -78,8 +81,6 @@ public static class Cutter
 		{
 			secondCuttable?.Delete();
 		}
-		HitObject.EnableAllCollisions = false;
-		HitObject.EnableDrawing = false;
 
 		//TODO: figure out a better solution to make the object move apart from the cut
 		var ForcePushInDirectionofplane = Plane.Normal * ForcePush;
@@ -91,6 +92,8 @@ public static class Cutter
 			secondCuttable.Velocity += HitObject.Velocity;
 		}
 		HitObject.Delete();
+
+		Log.Debug( $"CuttingBox took: {sw.ElapsedMilliseconds}ms. to cut {cutbox.Algorithm.OriginalCutBuffer.Vertex.Count} Vertices", 3 );
 	}
 
 	private static void SendChunkedData( BaseCuttable cutobject, int debugnum, CutBuffer res, CutBuffer hole, CuttableProperties modelp )

@@ -19,7 +19,7 @@
 							},
 						]
 						use_global_default = true
-						global_default_material = "materials/1_snow.vmat"
+						global_default_material = "models/citizen/skin/citizen_skin.vmat"
 					},
 				]
 			},
@@ -58,6 +58,7 @@
 								cpu_access = true
 							},
 						]
+						disabled = true
 						filename = "models/testing/suzane.dmx"
 						import_translation = [ 0.0, 0.0, 0.0 ]
 						import_rotation = [ 0.0, 0.0, 0.0 ]
@@ -69,10 +70,35 @@
 						import_filter = 
 						{
 							exclude_by_default = true
-							exception_list = 
-							[
-								"Icosphere",
-							]
+							exception_list = [  ]
+						}
+					},
+					{
+						_class = "RenderMeshFile"
+						children = 
+						[
+							{
+								_class = "RenderMeshMarkup"
+								material_search_path = ""
+								use_expensive_tangents = false
+								high_high_precision_texcoords = false
+								calc_per_vertex_curvature = false
+								prefer_high_density_tris_in_uv_density_calc = false
+								cpu_access = true
+							},
+						]
+						filename = "models/citizen/citizen.fbx"
+						import_translation = [ 0.0, 0.0, 0.0 ]
+						import_rotation = [ 0.0, 0.0, 0.0 ]
+						import_scale = 0.39
+						align_origin_x_type = "None"
+						align_origin_y_type = "None"
+						align_origin_z_type = "None"
+						parent_bone = ""
+						import_filter = 
+						{
+							exclude_by_default = false
+							exception_list = [  ]
 						}
 					},
 				]
@@ -86,7 +112,7 @@
 						game_class = "CuttableProperties"
 						game_keys = 
 						{
-							materialname = resource:"materials/1_snow.vmat"
+							materialname = resource:"models/citizen/skin/citizen_skin.vmat"
 						}
 					},
 				]

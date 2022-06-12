@@ -74,6 +74,8 @@ public partial class BaseCuttable : ModelEntity
 
 	IEnumerable<byte> _cutbufferData;
 	IEnumerable<byte> _cutholeData;
+	byte[] _completecutbufferData;
+	byte[] _completecutholeData;
 	byte[] _modelData;
 
 
@@ -95,6 +97,8 @@ public partial class BaseCuttable : ModelEntity
 		}
 		if ( currentchunk == chunkAmount )
 		{
+			_completecutbufferData = _cutbufferData.ToArray();
+			_completecutholeData = _cutholeData.ToArray();
 			FinalizeCutBuffer();
 		}
 
@@ -102,18 +106,21 @@ public partial class BaseCuttable : ModelEntity
 	[ClientRpc]
 	public void ReceiveCutBuffer( byte[] cutbuffer, byte[] holeBuffer, byte[] ModelPropertiesData )
 	{
-		_cutbufferData = cutbuffer;
-		_cutholeData = holeBuffer;
+		_completecutbufferData = cutbuffer;
+		_completecutholeData = holeBuffer;
 		_modelData = ModelPropertiesData;
+
 		FinalizeCutBuffer();
 	}
 
 	public void FinalizeCutBuffer()
 	{
-		CutBuffer c = CutBuffer.ReceiveCutBuffer( _cutbufferData.ToArray().Decompress() );
-		CutBuffer h = CutBuffer.ReceiveCutBuffer( _cutholeData.ToArray().Decompress() );
-		Log.Debug( $"Received cutbuffer with {c.Vertex.Count} cutpoints and {h.Vertex.Count} holepoints", 4 );
+		CutBuffer c = CutBuffer.ReceiveCutBuffer( _completecutbufferData.Decompress() );
+		CutBuffer h = CutBuffer.ReceiveCutBuffer( _completecutholeData.Decompress() );
 		ModelProperties = CuttableProperties.ReceiveProperties( _modelData );
+
+		Log.Debug( $"Received cutbuffer with {c.Vertex.Count} cutpoints and {h.Vertex.Count} holepoints", 4 );
+
 		var mb = Model.Builder;
 		var mainmesh = new Mesh( Material.Load( ModelProperties.MaterialName ) );
 		mainmesh.CreateBuffers( c.GetVertexBuffer() );

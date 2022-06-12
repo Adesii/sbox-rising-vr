@@ -4,10 +4,10 @@ Layer0
 {
 	shader "cuttable_slice.vfx"
 
-	g_fBrightness "1.197"
-	g_fCutColor "[1.000000 0.247059 0.000000 1.000000]"
-	g_fMaxCutoff2 "1.000"
-	g_fMinCutoff "0.452"
+	g_fBrightness "0.098"
+	g_fCutColor "[0.458824 0.011765 0.011765 1.000000]"
+	g_fMaxCutoff2 "0.534"
+	g_fMinCutoff "0.436"
 
 	//---- Color ----
 	g_flModelTintAmount "1.000"

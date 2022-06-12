@@ -1,5 +1,6 @@
 ﻿using ACuttingBox.Entities;
 using ACuttingBox.Systems;
+using Rising.Util;
 using Rising.Utils;
 using Sandbox;
 
@@ -185,6 +186,7 @@ partial class VrPlayer : Player
 			Vector3 normal = (startpoint - endpoint).Cross( eyes - startpoint );
 			Plane idk = new( EyePosition, normal );
 			var tr = Trace.Sphere( 50, EyePosition, EyePosition + EyeRotation.Forward * 100 ).Ignore( this ).EntitiesOnly().RunAll();
+			Log.Debug( $"_____________", 3 );
 			if ( tr != null )
 				for ( int i = 0; i < tr.Length; i++ )
 				{

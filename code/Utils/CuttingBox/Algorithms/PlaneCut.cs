@@ -30,10 +30,12 @@ public class PlaneCut : CuttingAlgorithm
 			{
 				bm.Add( item );
 			}
-			foreach ( var item in originalIndices )
+			var newVerts = new List<Vertex>( originalIndices.Length );
+			for ( int i = 0; i < originalIndices.Length; i++ )
 			{
-				bm.AddRawIndex( (int)item );
+				newVerts.Add( originalVerts[originalIndices[i]] );
 			}
+			bm.Vertex = newVerts;
 			OriginalCutBuffer = bm;
 		}
 		await GameTask.RunInThreadAsync( () =>
@@ -56,24 +58,14 @@ public class PlaneCut : CuttingAlgorithm
 
 
 		Vertex[] originalVerts;
-		uint[] originalIndices;
 
 		if ( OriginalCutBuffer != null )
 		{
 			originalVerts = OriginalCutBuffer.Vertex.ToArray();
-			originalIndices = OriginalCutBuffer.Index.ToArray();
 		}
 		else
 		{
 			return;
-		}
-
-
-		var newVerts = new Vertex[originalIndices.Length];
-		for ( int i = 0; i < originalIndices.Length; i++ )
-		{
-			uint item = originalIndices[i];
-			newVerts[i] = originalVerts[item];
 		}
 
 		CutBuffer VB1 = new();
@@ -81,14 +73,10 @@ public class PlaneCut : CuttingAlgorithm
 		VB1.Init( true );
 		VB2.Init( true );
 
-
-		int vertexamount1 = 0;
-		int vertexamount2 = 0;
-
 		List<Vertex> edges1 = new();
 		List<Vertex> edges2 = new();
 
-		HandleVertexes( newVerts, VB1, VB2, plane, ref vertexamount1, ref vertexamount2, edges1, edges2 );
+		HandleVertexes( originalVerts, VB1, VB2, plane, edges1, edges2 );
 
 		CutBuffer cutpart1 = new();
 		cutpart1.Init( true );
@@ -96,15 +84,9 @@ public class PlaneCut : CuttingAlgorithm
 		CutBuffer cutpart2 = new();
 		cutpart2.Init( true );
 
-		List<Vector3> hullpoints1 = new();
-		List<Vector3> hullpoints2 = new();
 
-		bool hascuthole1 = false;
-		bool hascuthole2 = false;
-
-
-		(hullpoints1, hascuthole1) = HandleHull( VB1, cutpart1 );
-		(hullpoints2, hascuthole2) = HandleHull( VB2, cutpart2 );
+		var hullpoints1 = HandleHull( VB1, cutpart1 );
+		var hullpoints2 = HandleHull( VB2, cutpart2 );
 
 
 		result = new List<CutBuffer> { VB1, VB2 };
@@ -141,7 +123,7 @@ public class PlaneCut : CuttingAlgorithm
 	}
 
 
-	private void HandleVertexes( Vertex[] newVerts, CutBuffer VB1, CutBuffer VB2, Plane plane, ref int vertexamount1, ref int vertexamount2, List<Vertex> edges1, List<Vertex> edges2 )
+	private void HandleVertexes( Vertex[] newVerts, CutBuffer VB1, CutBuffer VB2, Plane plane, List<Vertex> edges1, List<Vertex> edges2 )
 	{
 		for ( int i = 0; i < newVerts.Length; i += 3 )
 		{
@@ -150,22 +132,18 @@ public class PlaneCut : CuttingAlgorithm
 			Vertex v3 = newVerts[i + 2];
 
 
-			HandleCutTriangle( v1, v2, v3, plane, VB1, VB2, out int vam, out int vam2, out var edge1, out var edge2 );
-			vertexamount1 += vam;
-			vertexamount2 += vam2;
+			HandleCutTriangle( v1, v2, v3, plane, VB1, VB2, out var edge1, out var edge2 );
 
 			edges1.AddRange( edge1 );
 			edges2.AddRange( edge2 );
 		}
 	}
 
-	private void HandleCutTriangle( Vertex v1, Vertex v2, Vertex v3, Plane plane, CutBuffer vB1, CutBuffer vB2, out int vamount1, out int vamount2, out List<Vertex> edge1, out List<Vertex> edge2 )
+	private void HandleCutTriangle( Vertex v1, Vertex v2, Vertex v3, Plane plane, CutBuffer vB1, CutBuffer vB2, out List<Vertex> edge1, out List<Vertex> edge2 )
 	{
 		IsInFront IsInFrontV1 = plane.IsInFront( v1.Position ) ? IsInFront.Positive : IsInFront.Negative;
 		IsInFront IsInFrontV2 = plane.IsInFront( v2.Position ) ? IsInFront.Positive : IsInFront.Negative;
 		IsInFront IsInFrontV3 = plane.IsInFront( v3.Position ) ? IsInFront.Positive : IsInFront.Negative;
-		vamount1 = 0;
-		vamount2 = 0;
 		edge1 = new();
 		edge2 = new();
 		if ( IsInFrontV1 == IsInFrontV2 && IsInFrontV2 == IsInFrontV3 )
@@ -173,13 +151,11 @@ public class PlaneCut : CuttingAlgorithm
 			if ( IsInFrontV1 == IsInFront.Positive )
 			{
 				vB1.AddTriangle( v1, v2, v3 );
-				vamount1++;
 
 			}
 			else
 			{
 				vB2.AddTriangle( v1, v2, v3 );
-				vamount2++;
 			}
 		}
 		else
@@ -203,8 +179,6 @@ public class PlaneCut : CuttingAlgorithm
 
 				vB1.AddTriangle( newV1, v3, newV2 );
 			}
-			vamount1++;
-			vamount2++;
 		}
 		else
 		if ( IsInFrontV1 == IsInFrontV3 )
@@ -227,10 +201,6 @@ public class PlaneCut : CuttingAlgorithm
 
 				vB1.AddTriangle( newV2, v2, newV1 );
 			}
-
-
-			vamount1++;
-			vamount2++;
 		}
 		else
 		{
@@ -255,19 +225,14 @@ public class PlaneCut : CuttingAlgorithm
 
 				vB1.AddTriangle( newV1, v1, newV2 );
 			}
-
-
-			vamount1++;
-			vamount2++;
 		}
 	}
 
-	private (List<Vector3>, bool) HandleHull( CutBuffer VB2, CutBuffer cutpart2 )
+	private List<Vector3> HandleHull( CutBuffer VB2, CutBuffer cutpart2 )
 	{
 		var firstConvexHull = ConvexHull.Create( VB2.Vertex.ConvertAll<ConvexHullPos>( x => x ) );
 
 		List<Vector3> hullpoints = new();
-		bool hascut = false;
 
 		if ( firstConvexHull.Outcome == ConvexHullCreationResultOutcome.Success )
 			foreach ( var item in firstConvexHull.Result.Faces )
@@ -291,14 +256,13 @@ public class PlaneCut : CuttingAlgorithm
 						vert3.Normal = normal;
 						vert3.Tangent = new Vector4( normal, -1f );
 						cutpart2.AddTriangle( vert1, vert2, vert3 );
-						hascut = true;
 					}
 				}
 
 				hullpoints.AddRange( list.Select( x => x.Pos ) );
 			}
 
-		return (hullpoints, hascut);
+		return hullpoints;
 	}
 
 	private Vector3 GetCenter( ConvexHullPos[] points )
